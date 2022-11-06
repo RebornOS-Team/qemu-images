@@ -9,3 +9,9 @@ Generic image for a aarch64 VM (e.g. QEMU) can be built using the following comm
     $ ./build-inside-vm.sh
 
 # GH Actions built biweekly
+
+The image is built using.
+
+# Credits
+
+Arch-boxes - https://gitlab.archlinux.org/archlinux/arch-boxes/

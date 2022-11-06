@@ -8,7 +8,7 @@ shopt -s extglob
 readonly DEFAULT_DISK_SIZE="2G"
 readonly IMAGE="image.img"
 # shellcheck disable=SC2016
-readonly MIRROR='https://geo.mirror.pkgbuild.com/$repo/os/$arch'
+readonly MIRROR='http://dk.mirror.archlinuxarm.org/$arch/$repo'
 
 function init() {
   readonly ORIG_PWD="${PWD}"
@@ -46,23 +46,30 @@ trap cleanup EXIT
 # Create the disk, partitions it, format the partition and mount the filesystem
 function setup_disk() {
   truncate -s "${DEFAULT_DISK_SIZE}" "${IMAGE}"
-  sgdisk --clear \
-    --new 1::+1M --typecode=1:ef02 \
-    --new 2::-0 --typecode=2:8300 \
-    "${IMAGE}"
-
   LOOPDEV=$(losetup --find --partscan --show "${IMAGE}")
+  parted -s "${LOOPDEV}" mklabel msdos
+  parted -s "${LOOPDEV}" mkpart primary fat32 0% 100M
+  parted -s "${LOOPDEV}" set 1 esp on
+  parted -s "${LOOPDEV}" mkpart primary btrfs 100M 100%
+
   # Partscan is racy
   wait_until_settled "${LOOPDEV}"
+  mkfs.fat -F 32 "${LOOPDEV}p1"
   mkfs.btrfs "${LOOPDEV}p2"
-  mount -o compress-force=zstd "${LOOPDEV}p2" "${MOUNT}"
+  mount -o compress=zstd "${LOOPDEV}p2" "${MOUNT}"
+  mount --mkdir "${LOOPDEV}p1" "${MOUNT}/efi"
 }
+
 
 # Install Arch Linux to the filesystem (bootstrap)
 function bootstrap() {
   cat <<EOF >pacman.conf
 [options]
-Architecture = auto
+Architecture = aarch64
+SigLevel = Never
+
+[RebornOS]
+Include = /etc/pacman.d/reborn-mirrorlist
 
 [core]
 Include = mirrorlist
@@ -72,12 +79,111 @@ Include = mirrorlist
 
 [community]
 Include = mirrorlist
+
+[alarm]
+Include = mirrorlist
+
+[aur]
+Include = mirrorlist
 EOF
   echo "Server = ${MIRROR}" >mirrorlist
+  cat <<EOF >pacman.conf.machine
+#
+# /etc/pacman.conf
+#
+# See the pacman.conf(5) manpage for option and repository directives
+
+#
+# GENERAL OPTIONS
+#
+[options]
+#IgnorePkg =
+# The following paths are commented out with their default values listed.
+# If you wish to use different paths, uncomment and update the paths.
+#RootDir     = /
+#DBPath      = /var/lib/pacman/
+#CacheDir    = /var/cache/pacman/pkg/
+#LogFile     = /var/log/pacman.log
+#GPGDir      = /etc/pacman.d/gnupg/
+#HookDir     = /etc/pacman.d/hooks/
+HoldPkg     = pacman glibc
+#XferCommand = /usr/bin/curl -L -C - -f -o %o %u
+#XferCommand = /usr/bin/wget --passive-ftp -c -O %o %u
+#CleanMethod = KeepInstalled
+Architecture = aarch64
+
+# Pacman won't upgrade packages listed in IgnorePkg and members of IgnoreGroup
+#IgnorePkg   =
+#IgnoreGroup =
+
+#NoUpgrade   =
+#NoExtract   =
+
+# Misc options
+#UseSyslog
+Color
+#NoProgressBar
+#CheckSpace
+#VerbosePkgLists
+ParallelDownloads = 5
+# By default, pacman accepts packages signed by keys that its local keyring
+# trusts (see pacman-key and its man page), as well as unsigned packages.
+SigLevel    = Required DatabaseOptional
+LocalFileSigLevel = Optional
+#RemoteFileSigLevel = Required
+
+#
+# REPOSITORIES
+#   - can be defined here or included from another file
+#   - pacman will search repositories in the order defined here
+#   - local/custom mirrors can be added here or in separate files
+#   - repositories listed first will take precedence when packages
+#     have identical names, regardless of version number
+#   - URLs will have $ repo replaced by the name of the current repo
+#   - URLs will have $ arch replaced by the name of the architecture
+#
+# Repository entries are of the format:
+#       [repo-name]
+#       Server = ServerName
+#       Include = IncludePath
+#
+# The header [repo-name] is crucial - it must be present and
+# uncommented to enable the repo.
+#
+
+# The testing repositories are disabled by default. To enable, uncomment the
+# repo name header and Include lines. You can add preferred servers immediately
+# after the header, and they will be used before the default mirrors.
+
+[RebornOS]
+Include = /etc/pacman.d/reborn-mirrorlist
+
+[core]
+Include = /etc/pacman.d/mirrorlist
+
+[extra]
+Include = /etc/pacman.d/mirrorlist
+
+[community]
+Include = /etc/pacman.d/mirrorlist
+
+[alarm]
+Include = /etc/pacman.d/mirrorlist
+
+[aur]
+Include = /etc/pacman.d/mirrorlist
+
+# An example of a custom package repository.  See the pacman manpage for
+# tips on creating your own repositories.
+#[custom]
+#SigLevel = Optional TrustAll
+#Server = file:///home/custompkgs
+EOF
 
   # We use the hosts package cache
-  pacstrap -c -C pacman.conf -M "${MOUNT}" base linux grub openssh sudo btrfs-progs reflector
+  pacstrap -c -C pacman.conf -M "${MOUNT}" base linux-aarch64 grub dosfstools efibootmgr openssh sudo btrfs-progs rebornos-keyring rebornos-mirrorlist rebornos-os-release lsb-release rate-mirrors
   cp mirrorlist "${MOUNT}/etc/pacman.d/"
+  cp pacman.conf.machine "${MOUNT}/etc/pacman.conf"
 }
 
 # Cleanup the image and trim it
@@ -147,10 +253,8 @@ function create_image() {
   cp -a "${IMAGE}" "${tmp_image}"
   if [ -n "${DISK_SIZE}" ]; then
     truncate -s "${DISK_SIZE}" "${tmp_image}"
-    sgdisk --delete 2 "${tmp_image}"
-    sgdisk --move-second-header \
-      --new 2::-0 --typecode=2:8300 \
-      "${tmp_image}"
+    # make partition table extend to the end of the disk
+    parted -s "${tmp_image}" resizepart 2 100%
   fi
   mount_image "${tmp_image}"
   if [ -n "${DISK_SIZE}" ]; then
@@ -170,15 +274,18 @@ function create_image() {
   mv_to_output "${1}"
 }
 
+
 # ${1} - Optional build version. If not set, will generate a default based on date.
 function main() {
   if [ "$(id -u)" -ne 0 ]; then
     echo "root is required"
     exit 1
   fi
+  printf "Running initial setup...\n"
   init
-
+  printf "Running setup_disk...\n"
   setup_disk
+  printf "Running bootstrap...\n"
   bootstrap
   # shellcheck source=images/base.sh
   source "${ORIG_PWD}/images/base.sh"
@@ -187,7 +294,7 @@ function main() {
 
   local build_version
   if [ -z "${1:-}" ]; then
-    build_version="$(date +%Y%m%d).0"
+    build_version="$(date +%Y-%m-%d)"
     echo "WARNING: BUILD_VERSION wasn't set!"
     echo "Falling back to $build_version"
   else

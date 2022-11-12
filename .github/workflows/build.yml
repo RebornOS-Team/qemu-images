@@ -11,7 +11,7 @@ on:
 jobs:
   create_release:
     name: create_release
-    runs-on: ubuntu-latest
+    runs-on: [ self-hosted, linux, ARM64 ]
     steps:
       - name: Get the release version from the tag
         if: env.PACKAGE_VERSION == ''
@@ -31,8 +31,7 @@ jobs:
       package_version: ${{ env.PACKAGE_VERSION }}
       release_upload_url: ${{ steps.release.outputs.upload_url }}
   create_img:
-  
-    runs-on: self-hosted
+    runs-on: [ self-hosted, linux, ARM64 ]
     steps:
       - uses: actions/checkout@v2
       - name: Run build script
@@ -86,6 +85,3 @@ jobs:
         run: |
           sudo rm -rf ./tmp
           sudo rm -rf ./output/*
-        
-
-      

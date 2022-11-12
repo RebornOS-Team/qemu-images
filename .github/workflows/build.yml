@@ -1,0 +1,26 @@
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Biweekly on Mondays at 12:00 UTC
+  schedule:
+    - cron: '0 12 * * 1'
+  # Allow building on demand
+  workflow_dispatch:
+
+# Output files are stored in the "artifacts" tab of the workflow run
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run build script
+        run: sudo bash ./build-inside-vm.sh
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: |
+            ./output/*
+          retention-days: 7
+          

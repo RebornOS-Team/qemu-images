@@ -9,7 +9,7 @@ readonly DEFAULT_DISK_SIZE="2G"
 readonly IMAGE="image.img"
 # shellcheck disable=SC2016
 readonly MIRROR='http://dk.mirror.archlinuxarm.org/$arch/$repo'
-readonly REBORN_MIRROR='https://de.mirror.rebornos.org/repo/$repo/os /$arch'
+readonly REBORN_MIRROR='https://de.mirror.rebornos.org/repo/$repo/os/$arch'
 
 function init() {
   readonly ORIG_PWD="${PWD}"
@@ -182,7 +182,7 @@ Include = /etc/pacman.d/mirrorlist
 EOF
 
   # We use the hosts package cache
-  pacstrap -c -C pacman.conf -M "${MOUNT}" base linux-aarch64 grub dosfstools efibootmgr openssh sudo btrfs-progs rebornos-keyring rebornos-mirrorlist rebornos-os-release lsb-release rate-mirrors
+  pacstrap -c -C pacman.conf -M "${MOUNT}" base linux-aarch64 grub dosfstools efibootmgr openssh sudo btrfs-progs archlinuxarm-keyring rebornos-keyring rebornos-mirrorlist rebornos-os-release lsb-release rate-mirrors
   cp mirrorlist "${MOUNT}/etc/pacman.d/"
   cp pacman.conf.machine "${MOUNT}/etc/pacman.conf"
 }

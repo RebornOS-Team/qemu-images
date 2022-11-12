@@ -26,10 +26,10 @@ jobs:
         with:
           name: RebornOS-ARM
           path: |
-            RebornOS-ARM-cloudimg-*.qcow2
-            RebornOS-ARM-cloudimg-*.qcow2.SHA256
-            RebornOS-ARM-generic-*.qcow2.SHA256
-            RebornOS-ARM-generic-*.qcow2
+            ./output/RebornOS-ARM-cloudimg-*.qcow2
+            ./output/RebornOS-ARM-cloudimg-*.qcow2.SHA256
+            ./output/RebornOS-ARM-generic-*.qcow2.SHA256
+            ./output/RebornOS-ARM-generic-*.qcow2
       # Cleanup the output files and ./tmp folder
       - name: Clean up
         run: |

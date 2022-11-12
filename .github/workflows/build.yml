@@ -1,14 +1,13 @@
-name: CI
+name: Build
 
 # Controls when the workflow will run
 on:
-  # Biweekly on Mondays at 12:00 UTC
-  schedule:
-    - cron: '0 12 * * 1'
-  # Allow building on demand
+  # PUSH to main branch
+  push:
+    branches: [ main ]
+
   workflow_dispatch:
 
-# Output files are stored in the "artifacts" tab of the workflow run
 jobs:
   build:
     runs-on: self-hosted
@@ -16,11 +15,26 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run build script
         run: sudo bash ./build-inside-vm.sh
+      # Expected output files are:
+      # - RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2
+      # - RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2.SHA256
+      # - RebornOS-ARM-generic-YYYY-MM-DD.qcow2.SHA256
+      # - RebornOS-ARM-generic-YYYY-MM-DD.qcow2
+      # Upload the output files as seperate artifact files
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
-          name: artifacts
+          name: RebornOS-ARM
           path: |
-            ./output/*
-          retention-days: 7
-          
+            RebornOS-ARM-cloudimg-*.qcow2
+            RebornOS-ARM-cloudimg-*.qcow2.SHA256
+            RebornOS-ARM-generic-*.qcow2.SHA256
+            RebornOS-ARM-generic-*.qcow2
+      # Cleanup the output files and ./tmp folder
+      - name: Clean up
+        run: |
+          sudo rm -rf ./tmp
+          sudo rm -rf ./output/*
+        
+
+      

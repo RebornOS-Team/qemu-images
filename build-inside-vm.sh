@@ -66,8 +66,10 @@ function setup_disk() {
 function bootstrap() {
   cat <<EOF >pacman.conf
 [options]
+
 Architecture = aarch64
 SigLevel = Never
+ParallelDownloads = 6
 
 [RebornOS]
 Server = ${REBORN_MIRROR}

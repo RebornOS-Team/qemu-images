@@ -35,10 +35,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run build script
-        with:
         env:
           build_version: ${{ needs.create_release.outputs.package_version }}
-        run: sudo bash ./build-inside-vm.sh
+        run: sudo ./build-inside-vm.sh
       # Expected output files are:
       # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2
       # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2.SHA256

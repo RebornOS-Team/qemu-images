@@ -30,7 +30,8 @@ jobs:
     outputs:
       package_version: ${{ env.PACKAGE_VERSION }}
       release_upload_url: ${{ steps.release.outputs.upload_url }}
-  build:
+  create_img:
+  
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v2

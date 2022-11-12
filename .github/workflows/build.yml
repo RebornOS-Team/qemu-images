@@ -2,34 +2,85 @@ name: Build
 
 # Controls when the workflow will run
 on:
-  # push to master branch
   push:
-    branches: [ master ]
+    tags:
+      - '20[0-9][0-9]-[0-9][0-9]-[0-9][0-9]'
 
   workflow_dispatch:
 
 jobs:
+  create_release:
+    name: create_release
+    runs-on: [self-hosted, ARM64]
+    steps:
+      - name: Get the release version from the tag
+        if: env.PACKAGE_VERSION == ''
+        run: |
+          echo "PACKAGE_VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          echo "version is: ${{ env.PACKAGE_VERSION }}"
+      - name: Create GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          tag_name: ${{ env.PACKAGE_VERSION }}
+          release_name: ${{ env.PACKAGE_VERSION }}
+
+    outputs:
+      package_version: ${{ env.PACKAGE_VERSION }}
+      release_upload_url: ${{ steps.release.outputs.upload_url }}
   build:
-    runs-on: self-hosted
+    runs-on: [self-hosted, ARM64]
     steps:
       - uses: actions/checkout@v2
       - name: Run build script
+        with:
+        env:
+          build_version: ${{ needs.create_release.outputs.package_version }}
         run: sudo bash ./build-inside-vm.sh
       # Expected output files are:
-      # - RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2
-      # - RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2.SHA256
-      # - RebornOS-ARM-generic-YYYY-MM-DD.qcow2.SHA256
-      # - RebornOS-ARM-generic-YYYY-MM-DD.qcow2
-      # Upload the output files as seperate artifact files
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
+      # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2
+      # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2.SHA256
+      # - ./output/RebornOS-ARM-generic-YYYY-MM-DD.qcow2.SHA256
+      # - ./output/RebornOS-ARM-generic-YYYY-MM-DD.qcow2
+      # Upload the output files as release assets to 
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          name: RebornOS-ARM
-          path: |
-            ./output/RebornOS-ARM-cloudimg-*.qcow2
-            ./output/RebornOS-ARM-cloudimg-*.qcow2.SHA256
-            ./output/RebornOS-ARM-generic-*.qcow2.SHA256
-            ./output/RebornOS-ARM-generic-*.qcow2
+          upload_url: ${{ needs.create_release.outputs.release_upload_url }}
+          asset_path: ./output/RebornOS-ARM-cloudimg-${{ needs.create_release.outputs.package_version }}.qcow2
+          asset_name: RebornOS-ARM-cloudimg-${{ needs.create_release.outputs.package_version }}.qcow2
+          asset_content_type: application/octet-stream
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_upload_url }}
+          asset_path: ./output/RebornOS-ARM-cloudimg-${{ needs.create_release.outputs.package_version }}.qcow2.SHA256
+          asset_name: RebornOS-ARM-cloudimg-${{ needs.create_release.outputs.package_version }}.qcow2.SHA256
+          asset_content_type: application/octet-stream
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_upload_url }}
+          asset_path: ./output/RebornOS-ARM-generic-${{ needs.create_release.outputs.package_version }}.qcow2
+          asset_name: RebornOS-ARM-generic-${{ needs.create_release.outputs.package_version }}.qcow2
+          asset_content_type: application/octet-stream
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        with:
+          upload_url: ${{ needs.create_release.outputs.release_upload_url }}
+          asset_path: ./output/RebornOS-ARM-generic-${{ needs.create_release.outputs.package_version }}.qcow2.SHA256
+          asset_name: RebornOS-ARM-generic-${{ needs.create_release.outputs.package_version }}.qcow2.SHA256
+          asset_content_type: application/octet-stream
       # Cleanup the output files and ./tmp folder
       - name: Clean up
         run: |

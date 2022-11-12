@@ -9,6 +9,8 @@ PACKAGES=(cloud-init cloud-guest-utils)
 SERVICES=(cloud-init-local.service cloud-init.service cloud-config.service cloud-final.service)
 
 function pre() {
+  sed -i 's/^name: arch/name: rebornos/' "${MOUNT}/etc/cloud/cloud.cfg"
+  sed -i 's/^gecos: arch Cloud User/gecos: rebornos Cloud User/' "${MOUNT}/etc/cloud/cloud.cfg"
   sed -Ei 's/^(GRUB_CMDLINE_LINUX_DEFAULT=.*)"$/\1 console=tty0 console=ttyS0,115200"/' "${MOUNT}/etc/default/grub"
   echo 'GRUB_TERMINAL="serial console"' >>"${MOUNT}/etc/default/grub"
   echo 'GRUB_SERIAL_COMMAND="serial --speed=115200"' >>"${MOUNT}/etc/default/grub"

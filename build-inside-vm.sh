@@ -285,6 +285,10 @@ function main() {
     echo "root is required"
     exit 1
   fi
+  # if build version env value is set print it
+  if [ -n "${BUILD_VERSION:-}" ]; then
+    echo "Build version: ${BUILD_VERSION}"
+  fi
   printf "Running initial setup...\n"
   init
   printf "Running setup_disk...\n"

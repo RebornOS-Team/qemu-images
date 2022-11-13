@@ -9,21 +9,13 @@ on:
   workflow_dispatch:
  # Get tag version build image and upload images to the release it was triggered from. Use  softprops/action-gh-release 
 jobs:
-  get_tag:
-    runs-on: ubuntu-latest
-    outputs:
-      tag: ${{ steps.get_tag.outputs.tag }}
-    steps:
-      - name: Get tag
-        id: get_tag
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
   build_img:
     runs-on: [ self-hosted, linux, ARM64 ]
     steps:
       - uses: actions/checkout@v2
       - name: Run build script
         env:
-          build_version: ${{ needs.get_tag.outputs.tag }}
+          build_version: ${{ github.ref_name }}
         run: sudo ./build-inside-vm.sh
       # Expected output files are:
       # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2

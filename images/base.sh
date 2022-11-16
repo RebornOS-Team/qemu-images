@@ -81,6 +81,4 @@ EOF
   # Replace GRUB_DISTRIBUTOR with RebornOS
   sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR=\"RebornOS\"/' "${MOUNT}/etc/default/grub"
   arch-chroot "${MOUNT}" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg
-  # Get the part uuid of / for the root= kernel parameter and replace ${LOOPDEV} with the uuid
-  sed -i "s|${LOOPDEV}p2|PARTUUID=$(blkid -s PARTUUID -o value "${LOOPDEV}p2")|" "${MOUNT}/boot/grub/grub.cfg"
 }

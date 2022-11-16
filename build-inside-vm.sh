@@ -88,7 +88,7 @@ Include = mirrorlist
 [aur]
 Include = mirrorlist
 EOF
-  rate-mirrors archarm >> mirrorlist
+  rate-mirrors archarm --allow-root >> mirrorlist
   cat <<EOF >pacman.conf.machine
 #
 # /etc/pacman.conf

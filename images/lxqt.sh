@@ -25,7 +25,7 @@ EOF
     sed -Ei 's/^(GRUB_CMDLINE_LINUX_DEFAULT=.*)"$/\1 splash"/' "${MOUNT}/etc/default/grub"
     arch-chroot "${MOUNT}" grub-mkconfig -o /boot/grub/grub.cfg
     sed -i 's/^HOOKS=(base udev autodetect modconf block filesystems keyboard fsck)/HOOKS=(base udev autodetect modconf block filesystems keyboard fsck plymouth)/' "${MOUNT}/etc/mkinitcpio.conf"
-    arch-chroot "${MOUNT}" mkinitcpio -p linux
+    arch-chroot "${MOUNT}" mkinitcpio -P
 }
 
 function post() {

@@ -16,6 +16,7 @@ function pre() {
   echo 'GRUB_TERMINAL="serial console"' >>"${MOUNT}/etc/default/grub"
   echo 'GRUB_SERIAL_COMMAND="serial --speed=115200"' >>"${MOUNT}/etc/default/grub"
   arch-chroot "${MOUNT}" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg
+  rm "${MOUNT}/etc/machine-id" || true
 }
 
 function post() {

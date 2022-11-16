@@ -26,7 +26,7 @@ EOF
     arch-chroot "${MOUNT}" grub-mkconfig -o /boot/grub/grub.cfg
     sed -i 's/^HOOKS=(base udev autodetect modconf block filesystems keyboard fsck)/HOOKS=(base udev autodetect modconf block filesystems keyboard fsck plymouth)/' "${MOUNT}/etc/mkinitcpio.conf"
     arch-chroot "${MOUNT}" mkinitcpio -P
-    rm "${MOUNT}/etc/machine-id"
+    rm "${MOUNT}/etc/machine-id" || true
 }
 
 function post() {

@@ -5,7 +5,6 @@ function pre() {
   # Remove machine-id see:
   # https://gitlab.archlinux.org/archlinux/arch-boxes/-/issues/25
   # https://gitlab.archlinux.org/archlinux/arch-boxes/-/issues/117
-  rm "${MOUNT}/etc/machine-id"
   # add EFI part to fstab
   printf 'UUID=%s /efi vfat noauto,x-systemd.automount,x-systemd.idle-timeout=300,rw,relatime,fmask=0133,dmask=0022,utf8   0 2\n' "$(blkid -s UUID -o value "${LOOPDEV}p1")" >>"${MOUNT}/etc/fstab"
   printf 'UUID=%s / btrfs defaults,discard=async 0 2\n' "$(blkid -s UUID -o value "${LOOPDEV}p2")" >>"${MOUNT}/etc/fstab"
@@ -48,7 +47,6 @@ Description=Initializes mirrors for the VM
 After=network-online.target
 Wants=network-online.target
 Before=sshd.service cloud-final.service
-ConditionFirstBoot=yes
 
 [Service]
 Type=oneshot
@@ -81,4 +79,5 @@ EOF
   # Replace GRUB_DISTRIBUTOR with RebornOS
   sed -i 's/^GRUB_DISTRIBUTOR=.*/GRUB_DISTRIBUTOR=\"RebornOS\"/' "${MOUNT}/etc/default/grub"
   arch-chroot "${MOUNT}" /usr/bin/grub-mkconfig -o /boot/grub/grub.cfg
+  rm "${MOUNT}/etc/machine-id"
 }

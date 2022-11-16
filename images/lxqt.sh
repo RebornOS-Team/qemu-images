@@ -3,7 +3,7 @@
 IMAGE_NAME="RebornOS-ARM-generic-lxqt-${build_version}.qcow2"
 # It is meant for local usage so the disk should be "big enough".
 DISK_SIZE="40G"
-PACKAGES=(networkmanager nano vim wget yay rebornos-cosmic-lxqt network-manager-applet rebornos-grub2-theme-vimix-git-fix rebornos-plymouth-theme gvfs pamac-aur firefox)
+PACKAGES=(networkmanager nano vim wget yay rebornos-cosmic-lxqt network-manager-applet rebornos-grub2-theme-vimix-git-fix rebornos-plymouth-theme gvfs pamac-aur firefox qemu-guest-agent spice-vdagent)
 SERVICES=(NetworkManager.service sddm-plymouth.service)
 
 function pre() {
@@ -26,6 +26,7 @@ EOF
     arch-chroot "${MOUNT}" grub-mkconfig -o /boot/grub/grub.cfg
     sed -i 's/^HOOKS=(base udev autodetect modconf block filesystems keyboard fsck)/HOOKS=(base udev autodetect modconf block filesystems keyboard fsck plymouth)/' "${MOUNT}/etc/mkinitcpio.conf"
     arch-chroot "${MOUNT}" mkinitcpio -P
+    rm "${MOUNT}/etc/machine-id"
 }
 
 function post() {

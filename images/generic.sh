@@ -3,7 +3,7 @@
 IMAGE_NAME="RebornOS-ARM-generic-minimal-${build_version}.qcow2"
 # It is meant for local usage so the disk should be "big enough".
 DISK_SIZE="40G"
-PACKAGES=(networkmanager nano vim wget yay)
+PACKAGES=(networkmanager nano vim wget yay qemu-guest-agent spice-vdagent)
 SERVICES=(NetworkManager.service)
 
 function pre() {
@@ -15,6 +15,7 @@ function pre() {
   # allow wheel group to use sudo
   echo "%wheel ALL=(ALL) NOPASSWD: ALL" >"${MOUNT}/etc/sudoers.d/10-wheel"
   printf "y\ny\n" | arch-chroot "${MOUNT}" /usr/bin/pacman -Scc
+  rm "${MOUNT}/etc/machine-id"
 }
 
 function post() {

@@ -20,8 +20,10 @@ jobs:
       # Expected output files are:
       # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2
       # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2.SHA256
-      # - ./output/RebornOS-ARM-generic-YYYY-MM-DD.qcow2.SHA256
-      # - ./output/RebornOS-ARM-generic-YYYY-MM-DD.qcow2
+      # - ./output/RebornOS-ARM-generic-minimal-YYYY-MM-DD.qcow2.SHA256
+      # - ./output/RebornOS-ARM-generic-minimal-YYYY-MM-DD.qcow2
+      # - ./output/RebornOS-ARM-generic-lxqt-YYYY-MM-DD.qcow2.SHA256
+      # - ./output/RebornOS-ARM-generic-lxqt-YYYY-MM-DD.qcow2
       # Upload the output files as release assets to 
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
@@ -30,8 +32,10 @@ jobs:
           files: |
             ./output/RebornOS-ARM-cloudimg-*.qcow2
             ./output/RebornOS-ARM-cloudimg-*.qcow2.SHA256
-            ./output/RebornOS-ARM-generic-*.qcow2.SHA256
-            ./output/RebornOS-ARM-generic-*.qcow2
+            ./output/RebornOS-ARM-generic-minimal-*.qcow2.SHA256
+            ./output/RebornOS-ARM-generic-minimal-*.qcow2
+            ./output/RebornOS-ARM-generic-lxqt-*.qcow2.SHA256
+            ./output/RebornOS-ARM-generic-lxqt-*.qcow2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # Cleanup the output files and ./tmp folder

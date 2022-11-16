@@ -1,24 +1,18 @@
 #!/bin/bash
 # shellcheck disable=SC2034,SC2154
-IMAGE_NAME="RebornOS-ARM-generic-${build_version}.qcow2"
+IMAGE_NAME="RebornOS-ARM-generic-minimal-${build_version}.qcow2"
 # It is meant for local usage so the disk should be "big enough".
 DISK_SIZE="40G"
-PACKAGES=()
-SERVICES=()
+PACKAGES=(NetworkManager nano vi wget yay)
+SERVICES=(NetworkManager.service)
 
 function pre() {
   local NEWUSER="rebornos"
-  arch-chroot "${MOUNT}" /usr/bin/useradd -m -U "${NEWUSER}"
+  arch-chroot "${MOUNT}" /usr/bin/useradd -m -U "${NEWUSER}" -G wheel
   echo -e "${NEWUSER}\n${NEWUSER}" | arch-chroot "${MOUNT}" /usr/bin/passwd "${NEWUSER}"
   echo "${NEWUSER} ALL=(ALL) NOPASSWD: ALL" >"${MOUNT}/etc/sudoers.d/${NEWUSER}"
-
-  cat <<EOF >"${MOUNT}/etc/systemd/network/80-dhcp.network"
-[Match]
-Name=eth0
-
-[Network]
-DHCP=ipv4
-EOF
+  # allow wheel group to use sudo
+  echo "%wheel ALL=(ALL) NOPASSWD: ALL" >"${MOUNT}/etc/sudoers.d/10-wheel"
 }
 
 function post() {

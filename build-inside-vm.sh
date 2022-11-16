@@ -126,6 +126,7 @@ Architecture = aarch64
 # Misc options
 #UseSyslog
 Color
+ILoveCandy
 #NoProgressBar
 #CheckSpace
 #VerbosePkgLists

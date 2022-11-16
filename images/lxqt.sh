@@ -3,7 +3,7 @@
 IMAGE_NAME="RebornOS-ARM-generic-lxqt-${build_version}.qcow2"
 # It is meant for local usage so the disk should be "big enough".
 DISK_SIZE="40G"
-PACKAGES=(networkmanager nano vim wget yay rebornos-cosmic-lxqt network-manager-applet rebornos-grub2-theme-vimix-git-fix rebornos-plymouth-theme)
+PACKAGES=(networkmanager nano vim wget yay rebornos-cosmic-lxqt network-manager-applet rebornos-grub2-theme-vimix-git-fix rebornos-plymouth-theme gvfs pamac-aur firefox)
 SERVICES=(NetworkManager.service sddm-plymouth.service)
 
 function pre() {

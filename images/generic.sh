@@ -14,6 +14,7 @@ function pre() {
   echo "${NEWUSER} ALL=(ALL) NOPASSWD: ALL" >"${MOUNT}/etc/sudoers.d/${NEWUSER}"
   # allow wheel group to use sudo
   echo "%wheel ALL=(ALL) NOPASSWD: ALL" >"${MOUNT}/etc/sudoers.d/10-wheel"
+  printf "y\ny\n" | arch-chroot "${MOUNT}" /usr/bin/pacman -Scc
 }
 
 function post() {

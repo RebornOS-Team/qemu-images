@@ -8,8 +8,6 @@ shopt -s extglob
 readonly DEFAULT_DISK_SIZE="2G"
 readonly IMAGE="image.img"
 # shellcheck disable=SC2016
-readonly MIRROR='http://dk.mirror.archlinuxarm.org/$arch/$repo'
-# shellcheck disable=SC2016
 readonly REBORN_MIRROR='https://de.mirror.rebornos.org/repo/$repo/os/$arch'
 
 function init() {
@@ -90,7 +88,7 @@ Include = mirrorlist
 [aur]
 Include = mirrorlist
 EOF
-  echo "Server = ${MIRROR}" >mirrorlist
+  rate-mirrors archarm >> mirrorlist
   cat <<EOF >pacman.conf.machine
 #
 # /etc/pacman.conf

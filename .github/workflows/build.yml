@@ -10,31 +10,31 @@ on:
  # Get tag version build image and upload images to the release it was triggered from. Use  softprops/action-gh-release 
 jobs:
   build_img:
-    runs-on: [ self-hosted, linux, ARM64 ]
+    runs-on: [ self-hosted, linux, ARM64 ] 
     steps:
       - uses: actions/checkout@v2
       - name: Run build script
         env:
           BUILD_VERSION: ${{ github.ref_name }}
         run: sudo ./build-inside-vm.sh
-      # Expected output files are:
-      # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2
-      # - ./output/RebornOS-ARM-cloudimg-YYYY-MM-DD.qcow2.SHA256
-      # - ./output/RebornOS-ARM-generic-minimal-YYYY-MM-DD.qcow2.SHA256
-      # - ./output/RebornOS-ARM-generic-minimal-YYYY-MM-DD.qcow2
-      # - ./output/RebornOS-ARM-generic-lxqt-YYYY-MM-DD.qcow2.SHA256
-      # - ./output/RebornOS-ARM-generic-lxqt-YYYY-MM-DD.qcow2
-      # Upload the output files as release assets to 
+      - name: Get md5sum
+        id: md5sum
+        run: |
+          echo "::set-output name=md5sum_cloudimg::$(md5sum ./output/RebornOS-ARM-cloudimg-*.qcow2 | awk '{print $1}')"
+          echo "::set-output name=md5sum_generic_minimal::$(md5sum ./output/RebornOS-ARM-generic-minimal-*.qcow2 | awk '{print $1}')"
+          echo "::set-output name=md5sum_generic_lxqt::$(md5sum ./output/RebornOS-ARM-generic-lxqt-*.qcow2 | awk '{print $1}')"
       - name: Upload release assets
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
+          body: |
+            md5sums:
+            - Cloudimg - ${{ steps.md5sum.outputs.md5sum_cloudimg }}
+            - Minimal - ${{ steps.md5sum.outputs.md5sum_generic_minimal }}
+            - LXQT - ${{ steps.md5sum.outputs.md5sum_generic_lxqt }}
           files: |
             ./output/RebornOS-ARM-cloudimg-*.qcow2
-            ./output/RebornOS-ARM-cloudimg-*.qcow2.SHA256
-            ./output/RebornOS-ARM-generic-minimal-*.qcow2.SHA256
             ./output/RebornOS-ARM-generic-minimal-*.qcow2
-            ./output/RebornOS-ARM-generic-lxqt-*.qcow2.SHA256
             ./output/RebornOS-ARM-generic-lxqt-*.qcow2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

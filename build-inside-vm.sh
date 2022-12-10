@@ -237,13 +237,13 @@ function unmount_image() {
   LOOPDEV=""
 }
 
-# Compute SHA256, adjust owner to $SUDO_UID:$SUDO_UID and move to output/
+# Compute md5sum, adjust owner to $SUDO_UID:$SUDO_UID and move to output/
 function mv_to_output() {
-  sha256sum "${1}" >"${1}.SHA256"
+  md5sum "${1}" >"${1}.md5"
   if [ -n "${SUDO_UID:-}" ]; then
-    chown "${SUDO_UID}:${SUDO_GID}" "${1}"{,.SHA256}
+    chown "${SUDO_UID}:${SUDO_GID}" "${1}"{,.md5}
   fi
-  mv "${1}"{,.SHA256} "${OUTPUT}/"
+  mv "${1}"{,.md5} "${OUTPUT}/"
 }
 
 # Helper function: create a new image from the "base" image
